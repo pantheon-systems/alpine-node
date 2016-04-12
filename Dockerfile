@@ -5,6 +5,7 @@ FROM alpine:3.3
 # ENV VERSION=v0.12.12 NPM_VERSION=2
 # ENV VERSION=v4.4.1 NPM_VERSION=2
 ENV VERSION=v5.9.1 NPM_VERSION=3
+ENV GLIBC_VERSION 2.23-r1
 
 # For base builds
 # ENV CONFIG_FLAGS="--without-npm" RM_DIRS=/usr/include
@@ -38,3 +39,14 @@ RUN apk add --no-cache curl make gcc g++ binutils-gold python linux-headers paxc
   rm -rf /etc/ssl /node-${VERSION}.tar.gz /SHASUMS256.txt.asc /node-${VERSION} ${RM_DIRS} \
     /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp /root/.gnupg \
     /usr/lib/node_modules/npm/man /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/html ]
+
+# Download and install glibc compatability
+RUN apk add --update curl && \
+  curl -o glibc.apk -L "https://github.com/andyshinn/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk" && \
+  apk add --allow-untrusted glibc.apk && \
+  curl -o glibc-bin.apk -L "https://github.com/andyshinn/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk" && \
+  apk add --allow-untrusted glibc-bin.apk && \
+  /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc/usr/lib && \
+  apk del curl && \
+  rm -f glibc.apk glibc-bin.apk && \
+  rm -rf /var/cache/apk/*
